@@ -680,8 +680,9 @@ export default function EstimateProForm({ locale, initialData, isDuplicate }: Pr
         total,
         terms: termsList.map(t => ({ text: t.text })),
         paymentMethod,
-        bankInfo: paymentMethod === "bank" ? bankInfo : null,
+        bankInfo: (paymentMethod === "bank" || paymentMethod === "both") ? bankInfo : null,
         paypalEmail,
+        viewLink: savedEstimateId ? `${window.location.origin}/${locale}/quote/${savedEstimateId}` : undefined,
         locale,
       });
     } catch (err) {
