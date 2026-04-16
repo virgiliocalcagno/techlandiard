@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { COLLECTIONS, getDocument, updateDocument } from "@/lib/firestore";
+import { generateEstimatePDF } from "@/lib/pdf-generator";
 
 const PAYPAL_FEE = 0.057; // 5.7%
 
@@ -54,6 +55,7 @@ export default function QuoteViewClient() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [payStatus, setPayStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const isES = locale !== "en";
 
@@ -88,6 +90,44 @@ export default function QuoteViewClient() {
       setEstimate((prev) => prev ? { ...prev, status: "paid" } : prev);
     } catch {
       setPayStatus("error");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!estimate) return;
+    setPdfLoading(true);
+    try {
+      await generateEstimatePDF({
+        estimateNumber: estimate.estimateNumber,
+        date: estimate.date,
+        validUntil: estimate.validUntil,
+        clientName: estimate.clientName,
+        clientCompany: estimate.clientCompany || "",
+        headerNote: estimate.headerNote || "",
+        items: estimate.items.map(i => ({
+          name: i.name,
+          description: i.description || "",
+          qty: i.qty,
+          rate: i.rate,
+          tax: i.tax,
+          unit: i.unit || "",
+        })),
+        subtotal: estimate.subtotal,
+        discountAmt: estimate.discountAmt,
+        taxAmt: estimate.taxAmt,
+        paypalFee: +(estimate.total * PAYPAL_FEE).toFixed(2),
+        total: estimate.total,
+        terms: estimate.terms || [],
+        paymentMethod: estimate.paymentMethod,
+        bankInfo: estimate.bankInfo,
+        paypalEmail: estimate.paypalEmail,
+        viewLink: window.location.href,
+        locale,
+      });
+    } catch (err) {
+      console.error("PDF error:", err);
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -133,9 +173,26 @@ export default function QuoteViewClient() {
             <Image src="/logo.png" alt="Techlandiard" width={32} height={32} className="rounded-lg object-contain" />
             <span className="text-[#00FFFF] font-bold tracking-wider text-sm font-[var(--font-headline)]">TECHLANDIARD</span>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#adaaaa] border border-[#484847]/40 rounded-lg px-3 py-1">
-            {isES ? "Vista de Cotización" : "Quote View"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#adaaaa] border border-[#484847]/40 rounded-lg px-3 py-1">
+              {isES ? "Vista de Cotización" : "Quote View"}
+            </span>
+            {estimate && (
+              <button
+                type="button"
+                onClick={handleDownloadPDF}
+                disabled={pdfLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c1fffe]/10 border border-[#c1fffe]/20 text-[#c1fffe] text-[10px] font-bold uppercase tracking-wider hover:bg-[#c1fffe]/20 transition-all disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {pdfLoading ? "hourglass_empty" : "picture_as_pdf"}
+                </span>
+                {pdfLoading
+                  ? (isES ? "Generando..." : "Generating...")
+                  : (isES ? "Descargar PDF" : "Download PDF")}
+              </button>
+            )}
+          </div>
         </header>
 
         <main className="pt-24 pb-16 px-4 md:px-6 max-w-3xl mx-auto">
@@ -439,6 +496,23 @@ export default function QuoteViewClient() {
               </ul>
             </div>
           )}
+
+          {/* Download PDF */}
+          <div className="flex justify-center mb-6">
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              disabled={pdfLoading}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#c1fffe]/10 border border-[#c1fffe]/20 text-[#c1fffe] font-bold hover:bg-[#c1fffe]/20 transition-all disabled:opacity-50 text-sm"
+            >
+              <span className="material-symbols-outlined">
+                {pdfLoading ? "hourglass_empty" : "picture_as_pdf"}
+              </span>
+              {pdfLoading
+                ? (isES ? "Generando PDF..." : "Generating PDF...")
+                : (isES ? "Descargar Cotización en PDF" : "Download Quote as PDF")}
+            </button>
+          </div>
 
           {/* Footer */}
           <div className="text-center py-6">
