@@ -1,0 +1,12 @@
+runConfig:
+  runtime: nodejs20
+
+env:
+  - variable: NEXT_PUBLIC_PAYPAL_CLIENT_ID
+    secret: NEXT_PUBLIC_PAYPAL_CLIENT_ID
+
+  - variable: PAYPAL_SECRET
+    secret: PAYPAL_SECRET
+
+  - variable: PAYPAL_BASE_URL
+    secret: PAYPAL_BASE_URL
