@@ -21,8 +21,8 @@ const t = {
     viewAll: "Ver Inventario Completo",
     recentActivity: "Actividad Reciente",
     satisfaction: "Satisfacción Cliente",
-    items: [],
-    activities: [],
+    items: [] as { sku: string; name: string; pct: number; color: string; status: string }[],
+    activities: [] as { title: string; time: string; desc: string; color: string; icon: string }[],
   },
   en: {
     title: "Operational Summary",
@@ -37,8 +37,8 @@ const t = {
     viewAll: "View Full Inventory",
     recentActivity: "Recent Activity",
     satisfaction: "Customer Satisfaction",
-    items: [],
-    activities: [],
+    items: [] as { sku: string; name: string; pct: number; color: string; status: string }[],
+    activities: [] as { title: string; time: string; desc: string; color: string; icon: string }[],
   },
 };
 

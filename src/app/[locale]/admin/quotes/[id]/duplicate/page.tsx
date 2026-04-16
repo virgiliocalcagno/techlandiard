@@ -1,5 +1,7 @@
-import DuplicateQuoteClient from "./DuplicateQuoteClient";
+export function generateStaticParams() {
+  return [];
+}
 
 export default function DuplicateQuotePage() {
-  return <DuplicateQuoteClient />;
+  return null;
 }

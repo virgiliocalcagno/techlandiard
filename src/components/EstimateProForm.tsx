@@ -137,16 +137,16 @@ const labels = {
     currency: "USD",
     taxRate: 16,
     // Catalog
-    catalogItems: [],
-    savedClients: [],
+    catalogItems: [] as { sku: string; name: string; desc: string; unit: string; price: number }[],
+    savedClients: [] as { name: string; company: string; email: string; phone: string; address: string }[],
     // Terms templates
     termsTemplates: [
-      { id: 1, text: "Garantía de 12 meses en hardware y mano de obra." },
-      { id: 2, text: "Vigencia de cotización: 15 días calendario." },
-      { id: 3, text: "Se requiere un anticipo del 50% para iniciar el proyecto." },
-      { id: 4, text: "El tiempo estimado de entrega está sujeto a disponibilidad de stock." },
+      "Garantía de 12 meses en hardware y mano de obra.",
+      "Vigencia de cotización: 15 días calendario.",
+      "Se requiere un anticipo del 50% para iniciar el proyecto.",
+      "El tiempo estimado de entrega está sujeto a disponibilidad de stock.",
     ],
-    todayEstimates: [],
+    todayEstimates: [] as { id: string; client: string; amount: number }[],
     // Add Client modal labels
     clientPhone: "Teléfono",
     clientEmail: "Correo electrónico",
@@ -235,15 +235,15 @@ const labels = {
     saveEstimate: "Save estimate",
     currency: "USD",
     taxRate: 16,
-    catalogItems: [],
-    savedClients: [],
+    catalogItems: [] as { sku: string; name: string; desc: string; unit: string; price: number }[],
+    savedClients: [] as { name: string; company: string; email: string; phone: string; address: string }[],
     termsTemplates: [
-      { id: 1, text: "12-month warranty on hardware and labor." },
-      { id: 2, text: "Quote validity: 15 calendar days." },
-      { id: 3, text: "50% down payment required to start the project." },
-      { id: 4, text: "Estimated delivery time subject to stock availability." },
+      "12-month warranty on hardware and labor.",
+      "Quote validity: 15 calendar days.",
+      "50% down payment required to start the project.",
+      "Estimated delivery time subject to stock availability.",
     ],
-    todayEstimates: [],
+    todayEstimates: [] as { id: string; client: string; amount: number }[],
     // Add Client modal labels
     clientPhone: "Phone",
     clientEmail: "Email",
@@ -350,10 +350,10 @@ export default function EstimateProForm({ locale, initialData, isDuplicate }: Pr
   useEffect(() => {
     const loadClients = async () => {
       try {
-        const clients = await getDocuments(COLLECTIONS.CLIENTS);
+        const clients = await getDocuments(COLLECTIONS.CLIENTS) as (Client & { id?: string })[];
       // Combine with hardcoded ones for demo if needed, but better use DB
         setDbClients([...(clients as Client[]), ...l.savedClients]);
-        
+
         // Finalize initialization from initialData
         if (initialData) {
           setItems((initialData.items || []).map((item: LineItem, idx: number) => ({ ...item, id: item.id ?? idx + 1 })));
@@ -371,7 +371,7 @@ export default function EstimateProForm({ locale, initialData, isDuplicate }: Pr
           setTaxPctValue(initialData.taxValue || 0);
 
           if (initialData.clientId) {
-             const client = clients.find(c => c.id === initialData.clientId) || 
+             const client = clients.find(c => c.id === initialData.clientId) ||
                             l.savedClients.find(c => (c as any).id === initialData.clientId);
              if (client) setSelectedClient(client as Client);
           }
@@ -1192,10 +1192,10 @@ export default function EstimateProForm({ locale, initialData, isDuplicate }: Pr
                         {l.termsTemplates.map((tmpl, i) => (
                           <button
                             key={i}
-                            onClick={() => { setNewTermText(tmpl); }}
+                            onClick={() => { setNewTermText(tmpl as string); }}
                             className="w-full text-left px-3 py-2 rounded-lg bg-[#0e0e0e] border border-[#484847]/5 text-[10px] text-[#adaaaa] hover:border-[#c1fffe]/20 hover:text-[#c1fffe] transition-all line-clamp-1"
                           >
-                            {tmpl}
+                            {tmpl as string}
                           </button>
                         ))}
                       </div>

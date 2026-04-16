@@ -27,7 +27,7 @@ interface PDFEstimateData {
   paypalFee: number;
   total: number;
   terms: { text: string }[];
-  paymentMethod: "bank" | "paypal" | "none";
+  paymentMethod: "bank" | "paypal" | "none" | "both";
   bankInfo?: {
     bankName: string;
     accountNo: string;

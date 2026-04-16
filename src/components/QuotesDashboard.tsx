@@ -33,7 +33,7 @@ interface Translations {
   rejected: string;
   cols: string[];
   edit: string;
-  quotes: QuoteItem[];
+  quotes: QuoteItem[] | Quote[];
 }
 
 interface Props {
@@ -45,7 +45,7 @@ export default function QuotesDashboard({ locale, t }: Props) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
-  const [quotes, setQuotes] = useState<Quote[]>(t.quotes || []);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -262,10 +262,10 @@ export default function QuotesDashboard({ locale, t }: Props) {
                       <button className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-[#c1fffe] transition-all" title={locale === "es" ? "Vista Previa" : "Preview"}>
                         <span className="material-symbols-outlined text-lg">visibility</span>
                       </button>
-                      <Link href={`/${locale}/admin/quotes/${q.dbId}/edit`} className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-white transition-all" title={t.edit} onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/${locale}/admin/quotes/edit?id=${q.dbId}`} className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-white transition-all" title={t.edit} onClick={(e) => e.stopPropagation()}>
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
-                      <Link href={`/${locale}/admin/quotes/${q.dbId}/duplicate`} className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-[#c1fffe] transition-all" title={locale === "es" ? "Duplicar" : "Duplicate"} onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/${locale}/admin/quotes/duplicate?id=${q.dbId}`} className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-[#c1fffe] transition-all" title={locale === "es" ? "Duplicar" : "Duplicate"} onClick={(e) => e.stopPropagation()}>
                         <span className="material-symbols-outlined text-lg">content_copy</span>
                       </Link>
                       <button className="p-2 rounded-xl hover:bg-[#262626] text-[#adaaaa] hover:text-[#8eff71] transition-all" title={locale === "es" ? "Convertir a Factura" : "Convert to Invoice"} onClick={(e) => e.stopPropagation()}>

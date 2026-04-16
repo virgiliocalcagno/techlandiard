@@ -20,7 +20,7 @@ const t = {
     ],
     recentInvoices: "Facturas Recientes",
     viewAll: "Ver todas",
-    invoices: [],
+    invoices: [] as { id: string; client: string; amount: string; date: string; status: string; color: string }[],
     cashflow: "Flujo de Caja — Últimos 6 meses",
     months: ["Nov", "Dic", "Ene", "Feb", "Mar", "Abr"],
     income: [0, 0, 0, 0, 0, 0],
@@ -28,7 +28,7 @@ const t = {
     incomeLabel: "Ingresos",
     expenseLabel: "Gastos",
     topClients: "Top Clientes",
-    clients: [],
+    clients: [] as { name: string; amount: string; pct: number }[],
   },
   en: {
     title: "Finance Dashboard",
@@ -42,7 +42,7 @@ const t = {
     ],
     recentInvoices: "Recent Invoices",
     viewAll: "View all",
-    invoices: [],
+    invoices: [] as { id: string; client: string; amount: string; date: string; status: string; color: string }[],
     cashflow: "Cash Flow — Last 6 months",
     months: ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr"],
     income: [0, 0, 0, 0, 0, 0],
@@ -50,7 +50,7 @@ const t = {
     incomeLabel: "Revenue",
     expenseLabel: "Expenses",
     topClients: "Top Clients",
-    clients: [],
+    clients: [] as { name: string; amount: string; pct: number }[],
   },
 };
 

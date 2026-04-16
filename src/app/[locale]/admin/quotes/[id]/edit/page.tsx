@@ -1,5 +1,7 @@
-import EditQuoteClient from "./EditQuoteClient";
+export function generateStaticParams() {
+  return [];
+}
 
 export default function EditQuotePage() {
-  return <EditQuoteClient />;
+  return null;
 }
