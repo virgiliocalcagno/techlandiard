@@ -311,111 +311,111 @@ export async function generateEstimatePDF(data: PDFEstimateData): Promise<void> 
   if (data.paymentMethod !== "none") {
     const showBank = data.paymentMethod === "bank" || data.paymentMethod === "both";
     const showPaypal = data.paymentMethod === "paypal" || data.paymentMethod === "both";
-    const boxW = pageW - margin * 2;
-    const innerX = margin + 5;
-    const lineH = 5;
 
-    // Pre-calculate box height based on actual content
-    let estimatedH = 14; // header
-    if (showBank && data.bankInfo) estimatedH += 6 + lineH * 5 + 4; // subheader + 5 rows + gap
-    if (showPaypal) estimatedH += 6 + lineH * 2 + 4;
-    if (data.viewLink) estimatedH += 6 + lineH * 2 + 2;
-    estimatedH += 4; // bottom padding
-
-    // New page if not enough space
-    const footerSafeY = pageH - 25;
-    if (y + estimatedH > footerSafeY) {
+    // ── Always start payment section on a fresh block ──
+    // Add new page if less than 80mm remaining
+    if (y > pageH - 80) {
       doc.addPage();
       doc.setFillColor(...C.white);
       doc.rect(0, 0, pageW, pageH, "F");
-      y = 20;
+      // Mini brand header on continuation page
+      doc.setFillColor(...C.cyan);
+      doc.rect(0, 0, pageW, 2, "F");
+      doc.setTextColor(...C.blue);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("TECHLANDIARD", margin, 12);
+      doc.setFontSize(7);
+      doc.setTextColor(...C.muted);
+      doc.text(data.estimateNumber, margin, 18);
+      y = 26;
     }
 
-    doc.setFillColor(...C.light);
-    doc.setDrawColor(...C.border);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(margin, y, boxW, estimatedH, 2, 2, "FD");
+    // Section header line
+    doc.setDrawColor(...C.cyan);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
 
-    // Section title
     doc.setTextColor(...C.blue);
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
-    doc.text(l.paymentInfoLabel, innerX, y + 8);
+    doc.text(l.paymentInfoLabel, margin, y);
+    y += 8;
 
-    let py = y + 15;
+    doc.setFontSize(7.5);
 
     // ── BANK TRANSFER ──
     if (showBank && data.bankInfo) {
+      // Sub-header
       doc.setFillColor(...C.blue);
-      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
-      doc.setTextColor(...C.blue);
+      doc.roundedRect(margin, y - 4, 55, 7, 1, 1, "F");
+      doc.setTextColor(...C.white);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.text(l.bankTransferLabel, innerX + 3, py);
-      py += lineH;
+      doc.text(l.bankTransferLabel, margin + 3, y + 0.5);
+      y += 9;
 
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.bodyText);
-      doc.setFontSize(7.5);
 
-      const bankRows = [
-        `${l.bankLabel}: ${data.bankInfo.bankName}`,
-        `${l.titularLabel}: ${data.bankInfo.titular}`,
-        `${l.accountLabel}: ${data.bankInfo.accountNo}  |  ${l.accountTypeLabel}: ${data.bankInfo.accountType}`,
-        `${l.currencyLabel}: ${data.bankInfo.currency}  |  ${l.swiftLabel}: ${data.bankInfo.swift}`,
-      ];
-      bankRows.forEach(row => {
-        doc.text(row, innerX + 3, py);
-        py += lineH;
-      });
-      py += 3;
+      // Two-column layout for bank info
+      const col1 = margin;
+      const col2 = margin + 85;
+      doc.text(`${l.bankLabel}: ${data.bankInfo.bankName}`, col1, y);
+      doc.text(`${l.accountLabel}: ${data.bankInfo.accountNo}`, col2, y);
+      y += 5.5;
+      doc.text(`${l.titularLabel}: ${data.bankInfo.titular}`, col1, y);
+      doc.text(`${l.accountTypeLabel}: ${data.bankInfo.accountType}`, col2, y);
+      y += 5.5;
+      doc.text(`${l.currencyLabel}: ${data.bankInfo.currency}`, col1, y);
+      doc.text(`${l.swiftLabel}: ${data.bankInfo.swift}`, col2, y);
+      y += 9;
     }
 
     // ── PAYPAL ──
     if (showPaypal) {
       doc.setFillColor(...C.cyan);
-      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
-      doc.setTextColor(...C.blue);
+      doc.roundedRect(margin, y - 4, 40, 7, 1, 1, "F");
+      doc.setTextColor(...C.white);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.text(l.paypalLabel, innerX + 3, py);
-      py += lineH;
+      doc.text(l.paypalLabel, margin + 3, y + 0.5);
+      y += 9;
 
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.bodyText);
       const fee = (data.total * 0.057).toFixed(2);
       const totalWithFee = (data.total * 1.057).toFixed(2);
-      doc.text(`${l.paypalEmailLabel}: ${data.paypalEmail || "—"}`, innerX + 3, py);
-      py += lineH;
-      doc.text(`+5.7% comisión: $${fee}  →  Total: $${totalWithFee}`, innerX + 3, py);
-      py += lineH + 3;
+      doc.text(`${l.paypalEmailLabel}: ${data.paypalEmail || "—"}`, margin, y);
+      y += 5.5;
+      doc.setTextColor(...C.muted);
+      doc.text(`+5.7% = $${fee}  →  ${data.locale === "es" ? "Total con PayPal" : "Total with PayPal"}: $${totalWithFee}`, margin, y);
+      y += 9;
     }
 
-    // ── VIEW LINK ──
+    // ── VIEW / PAY LINK ──
     if (data.viewLink) {
       doc.setFillColor(...C.magenta);
-      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
-      doc.setTextColor(...C.blue);
+      doc.roundedRect(margin, y - 4, 65, 7, 1, 1, "F");
+      doc.setTextColor(...C.white);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.text(l.viewLinkLabel, innerX + 3, py);
-      py += lineH;
+      doc.text(l.viewLinkLabel, margin + 3, y + 0.5);
+      y += 9;
 
-      // Wrap URL if too long
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.blue);
-      const urlLines = doc.splitTextToSize(data.viewLink, boxW - 12);
+      // Break URL into max-width lines
+      const maxUrlW = pageW - margin * 2 - 4;
+      const urlLines: string[] = doc.splitTextToSize(data.viewLink, maxUrlW);
       urlLines.forEach((line: string) => {
-        doc.textWithLink(line, innerX + 3, py, { url: data.viewLink! });
-        py += lineH;
+        doc.textWithLink(line, margin, y, { url: data.viewLink! });
+        y += 5.5;
       });
+      y += 3;
     }
-
-    y = py + 6;
   }
 
   // ── FOOTER ──
-  // Always place footer at bottom of current page
+  // Always on the last/current page at fixed bottom
   const footerY = pageH - 14;
 
   // Thin cyan line above footer
