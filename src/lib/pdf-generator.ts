@@ -311,61 +311,111 @@ export async function generateEstimatePDF(data: PDFEstimateData): Promise<void> 
   if (data.paymentMethod !== "none") {
     const showBank = data.paymentMethod === "bank" || data.paymentMethod === "both";
     const showPaypal = data.paymentMethod === "paypal" || data.paymentMethod === "both";
-    const boxH = (showBank ? 44 : 0) + (showPaypal ? 14 : 0) + (data.viewLink ? 14 : 0) + 12;
+    const boxW = pageW - margin * 2;
+    const innerX = margin + 5;
+    const lineH = 5;
+
+    // Pre-calculate box height based on actual content
+    let estimatedH = 14; // header
+    if (showBank && data.bankInfo) estimatedH += 6 + lineH * 5 + 4; // subheader + 5 rows + gap
+    if (showPaypal) estimatedH += 6 + lineH * 2 + 4;
+    if (data.viewLink) estimatedH += 6 + lineH * 2 + 2;
+    estimatedH += 4; // bottom padding
+
+    // New page if not enough space
+    const footerSafeY = pageH - 25;
+    if (y + estimatedH > footerSafeY) {
+      doc.addPage();
+      doc.setFillColor(...C.white);
+      doc.rect(0, 0, pageW, pageH, "F");
+      y = 20;
+    }
 
     doc.setFillColor(...C.light);
     doc.setDrawColor(...C.border);
-    doc.roundedRect(margin, y, pageW - margin * 2, boxH, 2, 2, "FD");
+    doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, boxW, estimatedH, 2, 2, "FD");
 
+    // Section title
     doc.setTextColor(...C.blue);
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    doc.text(l.paymentInfoLabel, margin + 5, y + 7);
+    doc.text(l.paymentInfoLabel, innerX, y + 8);
 
     let py = y + 15;
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
 
+    // ── BANK TRANSFER ──
     if (showBank && data.bankInfo) {
-      doc.setTextColor(...C.muted);
+      doc.setFillColor(...C.blue);
+      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
+      doc.setTextColor(...C.blue);
       doc.setFont("helvetica", "bold");
-      doc.text(l.bankTransferLabel, margin + 5, py);
-      py += 5;
+      doc.setFontSize(7.5);
+      doc.text(l.bankTransferLabel, innerX + 3, py);
+      py += lineH;
+
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.bodyText);
-      doc.text(`${l.bankLabel}: ${data.bankInfo.bankName}`, margin + 5, py); py += 4.5;
-      doc.text(`${l.titularLabel}: ${data.bankInfo.titular}`, margin + 5, py); py += 4.5;
-      doc.text(`${l.accountLabel}: ${data.bankInfo.accountNo}`, margin + 5, py); py += 4.5;
-      doc.text(`${l.accountTypeLabel}: ${data.bankInfo.accountType}`, margin + 5, py); py += 4.5;
-      doc.text(`${l.currencyLabel}: ${data.bankInfo.currency}  |  ${l.swiftLabel}: ${data.bankInfo.swift}`, margin + 5, py);
-      py += 8;
+      doc.setFontSize(7.5);
+
+      const bankRows = [
+        `${l.bankLabel}: ${data.bankInfo.bankName}`,
+        `${l.titularLabel}: ${data.bankInfo.titular}`,
+        `${l.accountLabel}: ${data.bankInfo.accountNo}  |  ${l.accountTypeLabel}: ${data.bankInfo.accountType}`,
+        `${l.currencyLabel}: ${data.bankInfo.currency}  |  ${l.swiftLabel}: ${data.bankInfo.swift}`,
+      ];
+      bankRows.forEach(row => {
+        doc.text(row, innerX + 3, py);
+        py += lineH;
+      });
+      py += 3;
     }
 
+    // ── PAYPAL ──
     if (showPaypal) {
-      doc.setTextColor(...C.muted);
+      doc.setFillColor(...C.cyan);
+      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
+      doc.setTextColor(...C.blue);
       doc.setFont("helvetica", "bold");
-      doc.text(l.paypalLabel, margin + 5, py);
-      py += 5;
+      doc.setFontSize(7.5);
+      doc.text(l.paypalLabel, innerX + 3, py);
+      py += lineH;
+
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.bodyText);
       const fee = (data.total * 0.057).toFixed(2);
       const totalWithFee = (data.total * 1.057).toFixed(2);
-      doc.text(`${l.paypalEmailLabel}: ${data.paypalEmail || "—"}   (+5.7% fee: $${fee} → Total $${totalWithFee})`, margin + 5, py);
-      py += 8;
+      doc.text(`${l.paypalEmailLabel}: ${data.paypalEmail || "—"}`, innerX + 3, py);
+      py += lineH;
+      doc.text(`+5.7% comisión: $${fee}  →  Total: $${totalWithFee}`, innerX + 3, py);
+      py += lineH + 3;
     }
 
+    // ── VIEW LINK ──
     if (data.viewLink) {
+      doc.setFillColor(...C.magenta);
+      doc.rect(innerX - 1, py - 3.5, 2, 5, "F");
       doc.setTextColor(...C.blue);
       doc.setFont("helvetica", "bold");
-      doc.text(l.viewLinkLabel, margin + 5, py);
-      py += 5;
+      doc.setFontSize(7.5);
+      doc.text(l.viewLinkLabel, innerX + 3, py);
+      py += lineH;
+
+      // Wrap URL if too long
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...C.blue);
-      doc.textWithLink(data.viewLink, margin + 5, py, { url: data.viewLink });
+      const urlLines = doc.splitTextToSize(data.viewLink, boxW - 12);
+      urlLines.forEach((line: string) => {
+        doc.textWithLink(line, innerX + 3, py, { url: data.viewLink! });
+        py += lineH;
+      });
     }
+
+    y = py + 6;
   }
 
   // ── FOOTER ──
+  // Always place footer at bottom of current page
   const footerY = pageH - 14;
 
   // Thin cyan line above footer
