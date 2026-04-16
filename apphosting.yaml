@@ -4,9 +4,17 @@ runConfig:
 env:
   - variable: NEXT_PUBLIC_PAYPAL_CLIENT_ID
     secret: NEXT_PUBLIC_PAYPAL_CLIENT_ID
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: PAYPAL_SECRET
     secret: PAYPAL_SECRET
+    availability:
+      - RUNTIME
 
   - variable: PAYPAL_BASE_URL
     secret: PAYPAL_BASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
